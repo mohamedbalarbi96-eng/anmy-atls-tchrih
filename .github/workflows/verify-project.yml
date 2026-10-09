@@ -24,7 +24,7 @@ jobs:
           path: destination
           ref: main
 
-      - name: Copy original project without GitHub workflows
+      - name: Copy original project
         run: |
           set -e
           rsync -a --delete \
@@ -42,8 +42,18 @@ jobs:
 
           git add -A
 
-          # Preserve the destination repository's GitHub Actions files.
-          git restore --staged --worktree -- .github
+          # Restore the index for GitHub workflow files.
+          # This prevents workflow changes from entering the commit.
+          git reset HEAD -- .github
+
+          echo "Files staged for commit:"
+          git diff --cached --name-status
+
+          # Fail safely if any workflow file is staged.
+          if git diff --cached --name-only | grep -E '(^|/)\.github/workflows/'; then
+            echo "ERROR: A GitHub workflow file is staged."
+            exit 1
+          fi
 
           if git diff --cached --quiet; then
             echo "No project changes to commit."
