@@ -1,4 +1,4 @@
-name: Verify Anatomy Project
+name: Verify Human Atlas Project
 
 on:
   workflow_dispatch:
@@ -10,30 +10,39 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: "22.13.0"
           cache: npm
 
-      - name: Check project files
+      - name: Verify original project files
         run: |
           echo "Checking project structure..."
-          ls -la
-          echo "Checking Next.js configuration..."
-          find app -maxdepth 3 -type f 2>/dev/null | sort || true
-          echo "Checking package.json..."
-          node -e "console.log(JSON.stringify(require('./package.json'), null, 2))"
+
+          test -f package.json
+          test -f package-lock.json
+          test -f vite.config.ts
+          test -f vercel.json
+          test -d web
+          test -d public
+
+          echo "Project structure verified."
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Test project build
+      - name: Build project
         run: npm run build
+
+      - name: Verify build output
+        run: |
+          test -d dist
+          echo "Build completed successfully."
