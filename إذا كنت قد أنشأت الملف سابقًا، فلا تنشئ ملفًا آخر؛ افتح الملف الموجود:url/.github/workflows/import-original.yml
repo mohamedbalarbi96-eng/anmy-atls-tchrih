@@ -1,0 +1,52 @@
+name: Import Original Human Atlas
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout destination repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: destination
+
+      - name: Clone original project
+        run: |
+          git clone --depth 1 \
+            https://github.com/slorksmo/Human-Atlas.git \
+            original
+
+      - name: Copy complete project
+        run: |
+          set -e
+
+          rsync -a \
+            --exclude='/.git/' \
+            --exclude='/.github/workflows/import-original.yml' \
+            original/ destination/
+
+      - name: Commit and push
+        run: |
+          set -e
+          cd destination
+
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Import complete Human Atlas project"
+          git push origin HEAD:main
