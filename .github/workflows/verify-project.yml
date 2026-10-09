@@ -30,7 +30,7 @@ jobs:
           set -e
           rsync -a --delete \
             --exclude='/.git/' \
-            --exclude='/.github/workflows/' \
+            --exclude='.github/***'
             original/ destination/
 
       - name: Commit and push imported project
