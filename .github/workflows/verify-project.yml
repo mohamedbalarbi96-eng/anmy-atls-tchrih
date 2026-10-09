@@ -1,0 +1,39 @@
+name: Verify Anatomy Project
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check project files
+        run: |
+          echo "Checking project structure..."
+          ls -la
+          echo "Checking Next.js configuration..."
+          find app -maxdepth 3 -type f 2>/dev/null | sort || true
+          echo "Checking package.json..."
+          node -e "console.log(JSON.stringify(require('./package.json'), null, 2))"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Test project build
+        run: npm run build
