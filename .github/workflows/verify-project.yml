@@ -1,4 +1,4 @@
-name: Import Complete Human Atlas
+name: استيراد أطلس الإنسان الكامل
 
 on:
   workflow_dispatch:
@@ -7,60 +7,44 @@ permissions:
   contents: write
 
 jobs:
-  import:
+  import-project:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download original project
+        uses: actions/checkout@v4
+        with:
+          repository: slorksmo/Human-Atlas
+          path: original
+          persist-credentials: false
+
       - name: Checkout destination repository
         uses: actions/checkout@v4
         with:
-          ref: main
           path: destination
+          ref: main
+          persist-credentials: true
 
-      - name: Download original project
+      - name: Copy complete project
         run: |
           set -e
-          git clone \
-            https://github.com/slorksmo/Human-Atlas.git \
-            original
-
-      - name: Replace destination with original
-        run: |
-          set -e
-
-          echo "Original project structure:"
-          ls -la original
-
-          test -f original/package.json
-
           rsync -a --delete \
             --exclude='/.git/' \
+            --exclude='/.github/workflows/' \
             original/ destination/
-
-          echo "Verifying imported project..."
-          test -f destination/package.json
-
-          echo "Imported package.json:"
-          cat destination/package.json
-
-          echo "Import completed."
 
       - name: Commit and push imported project
         working-directory: destination
         run: |
           set -e
-
           git config user.name "github-actions[bot]"
-          git config user.email \
-            "41898282+github-actions[bot]@users.noreply.github.com"
-
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
 
           if git diff --cached --quiet; then
-            echo "Repository already matches the imported files."
+            echo "No changes to commit."
             exit 0
           fi
 
           git commit -m "Import complete original Human Atlas project"
-
           git push origin HEAD:main
