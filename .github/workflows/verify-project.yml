@@ -23,13 +23,13 @@ jobs:
         with:
           path: destination
           ref: main
-          persist-credentials: true
 
-      - name: Copy original project
+      - name: Copy original project without GitHub workflows
         run: |
           set -e
           rsync -a --delete \
             --exclude='/.git/' \
+            --exclude='/.github/' \
             original/ destination/
 
       - name: Commit and push project files
@@ -42,7 +42,7 @@ jobs:
 
           git add -A
 
-          # Keep the destination repository's workflow files unchanged.
+          # Preserve the destination repository's GitHub Actions files.
           git restore --staged --worktree -- .github
 
           if git diff --cached --quiet; then
