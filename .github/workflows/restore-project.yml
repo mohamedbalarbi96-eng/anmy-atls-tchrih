@@ -1,0 +1,36 @@
+name: Restore Human Atlas Project
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download original project
+        uses: actions/checkout@v4
+        with:
+          repository: slorksmo/Human-Atlas
+          ref: main
+          path: original
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Replace repository files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd original
+          git remote remove origin
+          git init -b main
+          git add -A
+          git commit -m "Restore original Human Atlas project"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin main
